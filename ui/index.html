@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub 代理</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="title">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.4 2.3 3.6 5.2 3.6 8.5s-1.2 6.2-3.6 8.5c-2.4-2.3-3.6-5.2-3.6-8.5S9.6 5.8 12 3.5z"/></svg>
+      <h1>GitHub 代理</h1>
+      <span class="ver" id="ver"></span>
+    </div>
+    <p class="sub">让 magpie 里的应用更新、插件、MCP、Skill 下载都走你配置的代理或镜像站。改的都是 magpie 自己的配置文件，不用重新打包 magpie。</p>
+  </header>
+
+  <section class="card" id="now">
+    <h2><i>·</i>现在生效 <span class="badge" id="now-badge">实时</span></h2>
+    <p class="hint">读的是 magpie <b>此刻真正在用</b>的配置：每 8 秒自动重读，改完不用手动刷新这一页。</p>
+    <table class="grid" id="now-table"><tbody></tbody></table>
+    <p class="hint small" id="now-hint" hidden></p>
+    <div class="row">
+      <button id="now-refresh">重新读取</button>
+      <span class="muted" id="now-note"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><i>1</i>代理通道 <span class="badge ok">推荐</span></h2>
+    <p class="hint">
+      写进 magpie 的 <code>settings.proxy</code>。magpie 自己的所有 HTTP 都经过 <code>netproxy</code>：
+      检查更新、下载更新包、插件市场、插件安装（含 bun / npm）、Skill、MCP、插件的子进程，全都走它。
+      <b>立即生效，不用重启。</b>
+    </p>
+    <div class="field">
+      <label for="proxy">代理地址</label>
+      <input id="proxy" autocomplete="off" spellcheck="false" placeholder="127.0.0.1:7897 或 socks5://127.0.0.1:1080">
+    </div>
+    <div class="row">
+      <button id="proxy-apply" class="primary">应用</button>
+      <button id="proxy-clear">清空（跟随系统/环境变量）</button>
+      <label class="check"><input type="checkbox" id="envproxy">同时写进用户环境变量（HTTPS_PROXY、ALL_PROXY，新进程才用）</label>
+    </div>
+    <p class="hint small">SOCKS5 也能填：magpie 会给 Bun 的请求自动搭一条 http 桥，git 自己就认 socks5://。</p>
+  </section>
+
+  <section class="card">
+    <h2><i>2</i>前缀通道 <span class="badge">镜像站</span></h2>
+    <p class="hint">
+      <b>代理和镜像可以同时设，也可以只设一个。</b>它们是两条独立的路：代理是「把连接交给代理服务器」（第 1 节），
+      镜像是「把 GitHub 原地址拼在前缀后面」（<code>https://gh-proxy.com/https://api.github.com/…</code>）。
+      只设镜像也覆盖得到 GitHub 相关的东西：更新与更新包走 <code>updateMirror</code>；
+      市场、插件安装、Skill、MCP 走 <code>github.com</code>、<code>api.github.com</code>、<code>raw.githubusercontent.com</code>、
+      <code>codeload.github.com</code> 这四个域名的前缀改写（magpie 的 <code>source.URLs()</code> 只给这四个加前缀）。
+      代理另外还能盖住前缀盖不到的：release 资产域（<code>objects.githubusercontent.com</code>）、镜像慢或挂掉时的大包、git 克隆。
+    </p>
+    <table class="grid" id="mirror-route"><tbody></tbody></table>
+    <div class="field">
+      <label for="mirror">前缀</label>
+      <input id="mirror" autocomplete="off" spellcheck="false" placeholder="https://ghfast.top 或 https://gh-proxy.com">
+    </div>
+    <div class="row">
+      <button id="mirror-apply" class="primary">应用</button>
+      <button id="mirror-restart" class="primary">应用并重启 magpie</button>
+      <button id="mirror-clear">清除</button>
+    </div>
+    <p class="hint small" id="mirror-note"></p>
+    <pre class="log" id="restart-log" hidden></pre>
+  </section>
+
+  <section class="card">
+    <h2><i>3</i>Git 通道 <span class="badge warn">代理通道的补丁</span></h2>
+    <p class="hint">
+      magpie 装 <b>git 型 Skill</b> 时直接调 <code>git</code>，它的 <code>gitEnv()</code> 只加了几个变量，
+      不注入代理环境，所以 git 不会走第 1 节的代理。这里改 git 自己的全局配置，只给 GitHub 的几个域名加
+      <code>http.&lt;url&gt;.proxy</code>，别的 remote 一概不碰。
+    </p>
+    <table class="grid" id="git-hosts"><tbody></tbody></table>
+    <div class="row">
+      <button id="git-apply" class="primary">用代理写进 git</button>
+      <button id="git-clear">清除 git 配置</button>
+      <button id="git-test">git ls-remote 自检</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><i>4</i>自检</h2>
+    <p class="hint">对 magpie 真正会用到的地址各探一次（HEAD，不下载内容）。<b>直连</b>一列红了、<b>经代理</b>一列绿了，就说明代理真的起作用。</p>
+    <div class="row">
+      <button id="run-test" class="primary">全部自检</button>
+      <span class="muted" id="test-note"></span>
+    </div>
+    <table class="grid test" id="test-table"><tbody></tbody></table>
+
+    <p class="hint" style="margin-top:20px">前缀自检：把每个地址拼在<b>现在的前缀</b>后面各取一次响应头（不下载内容）。哪一行红，就是这条路的镜像不通、magpie 到时候会退回直连。</p>
+    <div class="row">
+      <button id="run-prefix" class="primary">测一遍前缀</button>
+      <span class="muted" id="prefix-note"></span>
+    </div>
+    <table class="grid test" id="prefix-table"><tbody></tbody></table>
+  </section>
+
+  <section class="card">
+    <h2><i>5</i>谁走哪条路</h2>
+    <table class="grid matrix">
+      <thead><tr><th>magpie 要做的事</th><th>代理通道</th><th>镜像通道</th></tr></thead>
+      <tbody>
+        <tr><td>检查更新 / 下载更新包</td><td class="yes">立即生效</td><td class="yes">立即生效（<code>updateMirror</code>）</td></tr>
+        <tr><td>插件市场（topic 搜索、package.json、README）</td><td class="yes">立即生效</td><td class="yes">写 <code>MAGPIE_MIRRORS</code> 后重启 magpie</td></tr>
+        <tr><td>插件安装 / 更新（<code>github:</code> 源，codeload 压缩包）</td><td class="yes">立即生效</td><td class="yes">重启 magpie 后</td></tr>
+        <tr><td>插件安装 / 更新（npm 包，走 bun）</td><td class="yes">立即生效</td><td class="some">国内镜像开关 → npmmirror；变量开了也在官方失败后试</td></tr>
+        <tr><td>Skill 列表与压缩包</td><td class="yes">立即生效</td><td class="yes">重启 magpie 后</td></tr>
+        <tr><td>Skill 的 git 克隆</td><td class="yes">写第 3 节后立即生效</td><td class="no">不覆盖（git 不认镜像前缀）</td></tr>
+        <tr><td>MCP 列表、图标、安装</td><td class="yes">立即生效</td><td class="yes">重启 magpie 后</td></tr>
+        <tr><td>插件宿主里插件自己的 fetch</td><td class="yes">立即生效（宿主会跟着换）</td><td class="no">—</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <div>配置目录 <code id="cfgdir">…</code></div>
+    <div>改 <code>settings.json</code> 前会先留一份 <code>settings.json.github-proxy.bak</code>。</div>
+  </footer>
+</main>
+<div id="offline" class="offline" hidden></div>
+<div id="toast" class="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

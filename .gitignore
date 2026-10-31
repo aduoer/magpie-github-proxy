@@ -1,0 +1,11 @@
+node_modules/
+.smoke/
+.tmp-*
+*.log
+doc/ui.png
+doc/ui-v2.png
+doc/ui-v3.png
+doc/ui-v4.png
+doc/ui-v5.png
+.ref/
+.shots/

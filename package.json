@@ -1,0 +1,55 @@
+{
+  "name": "magpie-github-proxy",
+  "version": "0.3.6",
+  "description": "让 magpie 里的 GitHub 资源——应用更新、插件、MCP、Skill——走你配置的代理或镜像前缀。带自检、生效状态和一键重启。",
+  "type": "module",
+  "main": "./index.mjs",
+  "files": [
+    "index.mjs",
+    "lib",
+    "page",
+    "ui",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "magpie",
+    "magpie-plugin",
+    "magpie-page",
+    "opencode-plugin",
+    "github",
+    "proxy",
+    "mirror",
+    "china",
+    "gh-proxy"
+  ],
+  "license": "MIT",
+  "engines": {
+    "magpie": ">=0.1.1340"
+  },
+  "magpie": {
+    "page": {
+      "title": "GitHub proxy",
+      "titles": {
+        "zh": "GitHub 代理",
+        "zh-TW": "GitHub 代理",
+        "ja": "GitHub プロキシ",
+        "de": "GitHub-Proxy"
+      },
+      "file": "page/index.html",
+      "icon": "page/icon.svg"
+    },
+    "options": {
+      "port": 3478
+    }
+  },
+  "author": "aduoer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aduoer/magpie-github-proxy.git"
+  },
+  "homepage": "https://github.com/aduoer/magpie-github-proxy#readme",
+  "bugs": {
+    "url": "https://github.com/aduoer/magpie-github-proxy/issues"
+  }
+}
