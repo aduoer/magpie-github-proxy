@@ -1,6 +1,6 @@
 {
   "name": "magpie-github-proxy",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "让 magpie 里的 GitHub 资源——应用更新、插件、MCP、Skill——走你配置的代理或镜像前缀。带自检、生效状态和一键重启。",
   "type": "module",
   "main": "./index.mjs",

@@ -101,6 +101,9 @@
       <span class="muted" id="prefix-note"></span>
     </div>
     <table class="grid test" id="prefix-table"><tbody></tbody></table>
+    <p class="hint" style="margin-top:10px">这一列没有 <code>objects.githubusercontent.com</code>（release 资产域）：它只给带签名的临时地址（<code>?X-Amz-Signature=…</code>），
+      根路径什么都没有，探了也只能看到一个 404。而且走前缀下载更新包时，是前缀自己去取资产再流回来，根本不经过这个域名 ——
+      它只影响「代理能不能连上」，所以在上面「全部自检」里看。</p>
   </section>
 
   <section class="card">

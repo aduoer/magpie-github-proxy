@@ -279,11 +279,12 @@ function cell(result, { soft = false, note = "" } = {}) {
   const ms = result.ms >= 1000 ? (result.ms / 1000).toFixed(1) + "s" : result.ms + "ms";
   if (result.ok) {
     const code = result.status || 200;
-    const yes = result.expected === undefined ? code < 400 : result.expected;
+    const judged = result.expected !== undefined;
+    const yes = judged ? result.expected : code < 400;
     if (!yes) {
       return `<span class="pill warn" title="${escapeHTML(note || "这个地址本来就没有内容，能应答就说明请求转过去了")}">${code} · ${ms}</span>`;
     }
-    if (soft && code >= 400) return `<span class="pill warn" title="镜像应答了，但这个地址本身没有内容">${code} · ${ms}</span>`;
+    if (!judged && soft && code >= 400) return `<span class="pill warn" title="镜像应答了，但这个地址本身没有内容">${code} · ${ms}</span>`;
     return `<span class="pill ok" title="${escapeHTML(note || "")}">${code} · ${ms}</span>`;
   }
   return `<span class="pill bad" title="${escapeHTML(result.error || "")}">失败 · ${ms}</span>`;
